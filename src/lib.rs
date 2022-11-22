@@ -1,5 +1,8 @@
 use std::ops;
 
+#[cfg(feature = "renderer")]
+pub mod renderer;
+
 #[derive(Clone, PartialEq)]
 pub struct Point {
     pub x: i32,
@@ -161,10 +164,10 @@ impl <'a>Game<'a> {
 
     fn handle_input(&mut self, input: &Input) {
         match input {
-            Input::KeyDown => {},
-            Input::KeyLeft => {}
-            Input::KeyUp => {},
-            Input::KeyRight => {},
+            Input::KeyDown => {self.snake.set_dir(Direction::Down)},
+            Input::KeyLeft => {self.snake.set_dir(Direction::Left)},
+            Input::KeyUp => {self.snake.set_dir(Direction::Up)},
+            Input::KeyRight => {self.snake.set_dir(Direction::Right)},
         }
     }
 
