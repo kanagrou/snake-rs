@@ -42,6 +42,13 @@ enum Collision {
     Body,
 }
 
+pub enum Input {
+    KeyUp,
+    KeyDown,
+    KeyRight,
+    KeyLeft,
+}
+
 impl Direction {
     pub fn offset(&self) -> Point {
         match self {
@@ -152,11 +159,25 @@ impl <'a>Game<'a> {
         None
     }
 
+    fn handle_input(&mut self, input: &Input) {
+        match input {
+            Input::KeyDown => {},
+            Input::KeyLeft => {}
+            Input::KeyUp => {},
+            Input::KeyRight => {},
+        }
+    }
+
     pub fn score(&self) -> i32 {
         self.snake.body.len() as i32
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, inputs: Vec<Input>) {
+        // Inputs
+
+        inputs.iter().for_each(|i| self.handle_input(i));
+
+        // Collisions
         if let Some(collision) = self.check_collision() {
             match collision {
                 Collision::Food => self.snake.add_growth(1),
