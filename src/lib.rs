@@ -1,4 +1,5 @@
 use std::ops;
+use rand::Rng;
 
 #[cfg(feature = "renderer")]
 pub mod renderer;
@@ -99,6 +100,10 @@ impl Snake {
             self.growth -= 1;
         }
     }
+// point 1 (0,0)
+    pub fn in_self(&self, point: &Point) -> bool {
+        self.body.iter().any(|p| p == point)
+    }
 }
 
 pub struct Food {
@@ -112,6 +117,13 @@ impl Food {
             position: Point { x: 0, y: 0 },
             grid
         }
+    }
+
+    pub fn reset(&mut self) -> &Point {
+        let y = rand::thread_rng().gen_range(0..self.grid.height);
+        let x = rand::thread_rng().gen_range(0..self.grid.width);
+        self.position = Point {x, y};
+        &self.position
     }
 }
 
@@ -130,9 +142,11 @@ pub struct Game<'a> {
 impl <'a>Game<'a> {
     pub fn new(width: i32, height: i32, event_handler: &'a dyn Fn(Event)) -> Self {
         let grid = Grid { width, height };
-        let food = Food::new(grid.clone());
+        let mut food = Food::new(grid.clone());
         let mut snake = Snake::new(Direction::Right);
         snake.body.push(Point { x: width/2, y: height/2 });
+
+        while snake.in_self(food.reset()){}
 
         Self {
             grid, snake, food, event_handler
@@ -183,7 +197,10 @@ impl <'a>Game<'a> {
         // Collisions
         if let Some(collision) = self.check_collision() {
             match collision {
-                Collision::Food => self.snake.add_growth(1),
+                Collision::Food => {
+                    self.snake.add_growth(1);
+                    while self.snake.in_self(self.food.reset()){}
+                },
                 Collision::Wall => (self.event_handler)(Event::Defeat),
                 Collision::Body => (self.event_handler)(Event::Defeat)
             }
