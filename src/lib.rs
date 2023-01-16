@@ -51,6 +51,28 @@ pub enum Input {
     KeyDown,
     KeyRight,
     KeyLeft,
+    Quit,
+    Other
+}
+
+impl From<crossterm::event::KeyCode> for Input {
+    fn from(key_code: crossterm::event::KeyCode) -> Self {
+        match key_code {
+            crossterm::event::KeyCode::Left => Input::KeyLeft,
+            crossterm::event::KeyCode::Right => Input::KeyRight,
+            crossterm::event::KeyCode::Up => Input::KeyUp,
+            crossterm::event::KeyCode::Down => Input::KeyDown,
+            crossterm::event::KeyCode::Char(ch) => match ch {
+                'a' => Input::KeyLeft,
+                'd' => Input::KeyRight,
+                'w' => Input::KeyUp,
+                's' => Input::KeyDown,
+                _ => Input::Other,
+            },
+            crossterm::event::KeyCode::Esc => Input::Quit,
+            _ => Input::Other,
+        }
+    }
 }
 
 impl Direction {
@@ -127,20 +149,22 @@ impl Food {
     }
 }
 
-pub enum Event {
+pub enum GameState {
+    Ongoing,
     Defeat,
     Win,
 }
 
-pub struct Game<'a> {
+
+pub struct Game {
     pub grid: Grid,
     pub snake: Snake,
     pub food: Food,
-    pub event_handler: &'a dyn Fn(Event),
+    pub state: GameState,
 }
 
-impl <'a>Game<'a> {
-    pub fn new(width: i32, height: i32, event_handler: &'a dyn Fn(Event)) -> Self {
+impl Game {
+    pub fn new(width: i32, height: i32) -> Self {
         let grid = Grid { width, height };
         let mut food = Food::new(grid.clone());
         let mut snake = Snake::new(Direction::Right);
@@ -149,7 +173,7 @@ impl <'a>Game<'a> {
         while snake.in_self(food.reset()){}
 
         Self {
-            grid, snake, food, event_handler
+            grid, snake, food, state: GameState::Ongoing
         }
     }
     
@@ -169,7 +193,7 @@ impl <'a>Game<'a> {
         }
 
         // Body collision
-        if self.snake.body.iter().any(|p| p == snake_head) {
+        if self.snake.body.iter().skip(1).any(|p| p == snake_head) {
             return Some(Collision::Body);
         }
 
@@ -182,6 +206,9 @@ impl <'a>Game<'a> {
             Input::KeyLeft => {self.snake.set_dir(Direction::Left)},
             Input::KeyUp => {self.snake.set_dir(Direction::Up)},
             Input::KeyRight => {self.snake.set_dir(Direction::Right)},
+            Input::Quit => self.state = GameState::Defeat,
+            Input::Other => {},
+            
         }
     }
 
@@ -189,10 +216,19 @@ impl <'a>Game<'a> {
         self.snake.body.len() as i32
     }
 
+    pub fn is_ongoing(&self) -> bool {
+        match self.state {
+            GameState::Ongoing => true,
+            _ => false,
+        }
+    }
+
     pub fn update(&mut self, inputs: Vec<Input>) {
         // Inputs
 
         inputs.iter().for_each(|i| self.handle_input(i));
+
+        self.snake.step();
 
         // Collisions
         if let Some(collision) = self.check_collision() {
@@ -201,8 +237,8 @@ impl <'a>Game<'a> {
                     self.snake.add_growth(1);
                     while self.snake.in_self(self.food.reset()){}
                 },
-                Collision::Wall => (self.event_handler)(Event::Defeat),
-                Collision::Body => (self.event_handler)(Event::Defeat)
+                Collision::Wall => self.state = GameState::Defeat,
+                Collision::Body => self.state = GameState::Defeat,
             }
         };
     }

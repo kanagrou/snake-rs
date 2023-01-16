@@ -26,10 +26,6 @@ pub fn render_term(game: &Game) -> crossterm::Result<()> {
             }
         }
         print!("\n");
-    }
-    
-        
+    } 
     Ok(())
-
-    
 }
