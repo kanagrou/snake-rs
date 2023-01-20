@@ -8,11 +8,10 @@ const FOOD: char = 'o';
 
 pub fn render_term(game: &Game) -> crossterm::Result<()> {
     stdout()
-        .execute(cursor::SavePosition)?;
-    
+    .execute(cursor::MoveToRow(0))?;
     for i in 0..game.grid.width + 2 {
         for j in 0..game.grid.height + 2 { 
-            let point = Point { x: j, y: i };
+            let point = Point { x: j - 1, y: i - 1 };
 
             if j == 0 || j == game.grid.height + 1 ||
                 i == 0 || i == game.grid.width + 1{
@@ -26,6 +25,7 @@ pub fn render_term(game: &Game) -> crossterm::Result<()> {
             }
         }
         print!("\n");
-    } 
+    }
+    
     Ok(())
 }

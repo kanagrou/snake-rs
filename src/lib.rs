@@ -29,7 +29,7 @@ pub struct Grid {
 
 impl Grid {
     pub fn ofb(&self, p: &Point) -> bool {
-        p.x < 0 || p.x > self.width || p.y < 0 || p.y > self.height
+        p.x < 0 || p.x > self.width -1 || p.y < 0 || p.y > self.height - 1
     }
 }
 
@@ -46,6 +46,7 @@ enum Collision {
     Body,
 }
 
+#[derive(Debug)]
 pub enum Input {
     KeyUp,
     KeyDown,
