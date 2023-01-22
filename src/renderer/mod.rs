@@ -1,14 +1,10 @@
 use crate::{Game, Point};
-use std::io::stdout;
-use crossterm::{cursor, ExecutableCommand};
 
 const BORDER: char = '#';
 const SNAKE: char = '*'; 
 const FOOD: char = 'o';
 
-pub fn render_term(game: &Game) -> crossterm::Result<()> {
-    stdout()
-    .execute(cursor::MoveToRow(0))?;
+pub fn render_term(game: &Game) {
     for i in 0..game.grid.width + 2 {
         for j in 0..game.grid.height + 2 { 
             let point = Point { x: j - 1, y: i - 1 };
@@ -26,6 +22,4 @@ pub fn render_term(game: &Game) -> crossterm::Result<()> {
         }
         print!("\n");
     }
-    
-    Ok(())
 }

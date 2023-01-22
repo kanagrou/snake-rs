@@ -1,4 +1,4 @@
-use std::ops;
+use std::{ops, fmt};
 use rand::Rng;
 
 #[cfg(feature = "renderer")]
@@ -33,6 +33,7 @@ impl Grid {
     }
 }
 
+#[derive(PartialEq)]
 pub enum Direction {
     Up,
     Right,
@@ -56,26 +57,6 @@ pub enum Input {
     Other
 }
 
-impl From<crossterm::event::KeyCode> for Input {
-    fn from(key_code: crossterm::event::KeyCode) -> Self {
-        match key_code {
-            crossterm::event::KeyCode::Left => Input::KeyLeft,
-            crossterm::event::KeyCode::Right => Input::KeyRight,
-            crossterm::event::KeyCode::Up => Input::KeyUp,
-            crossterm::event::KeyCode::Down => Input::KeyDown,
-            crossterm::event::KeyCode::Char(ch) => match ch {
-                'a' => Input::KeyLeft,
-                'd' => Input::KeyRight,
-                'w' => Input::KeyUp,
-                's' => Input::KeyDown,
-                _ => Input::Other,
-            },
-            crossterm::event::KeyCode::Esc => Input::Quit,
-            _ => Input::Other,
-        }
-    }
-}
-
 impl Direction {
     pub fn offset(&self) -> Point {
         match self {
@@ -83,6 +64,14 @@ impl Direction {
             Direction::Left => Point { x: -1, y: 0},
             Direction::Right => Point { x: 1, y: 0},
             Direction::Down => Point { x: 0, y: 1}
+        }
+    }
+    pub fn opposite(&self) -> Direction {
+        match self {
+            Direction::Up => Direction::Down,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left,
+            Direction::Down => Direction::Up,
         }
     }
 }
@@ -107,7 +96,9 @@ impl Snake {
     }
 
     pub fn set_dir(&mut self, dir: Direction) {
-        self.dir = dir;
+        if self.dir != dir.opposite() {
+            self.dir = dir;
+        }
     }
 
     pub fn head(&self) -> Option<&Point> {
@@ -123,7 +114,7 @@ impl Snake {
             self.growth -= 1;
         }
     }
-// point 1 (0,0)
+
     pub fn in_self(&self, point: &Point) -> bool {
         self.body.iter().any(|p| p == point)
     }
@@ -165,6 +156,10 @@ pub struct Game {
 }
 
 impl Game {
+    const BORDER: char = '#';
+    const SNAKE: char = '*'; 
+    const FOOD: char = 'o';
+
     pub fn new(width: i32, height: i32) -> Self {
         let grid = Grid { width, height };
         let mut food = Food::new(grid.clone());
@@ -242,5 +237,29 @@ impl Game {
                 Collision::Body => self.state = GameState::Defeat,
             }
         };
+    }
+}
+
+impl fmt::Display for Game {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut result = String::new();
+        for i in 0..self.grid.width + 2 {
+            for j in 0..self.grid.height + 2 { 
+                let point = Point { x: j - 1, y: i - 1 };
+                if j == 0 || j == self.grid.height + 1 ||
+                    i == 0 || i == self.grid.width + 1{
+                    result.push(Game::BORDER);
+                } else if self.snake.in_self(&point){
+                    result.push(Game::SNAKE);
+                } else if &self.food.position == &point{
+                    result.push(Game::FOOD);
+                } else {
+                    result.push(' ');
+                }
+                result.push(' ');
+            }
+            result.push('\n');
+        }
+        write!(f, "{}", result)
     }
 }
