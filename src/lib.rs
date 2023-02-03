@@ -1,9 +1,6 @@
 use std::{ops, fmt};
 use rand::Rng;
 
-#[cfg(feature = "renderer")]
-pub mod renderer;
-
 #[derive(Clone, PartialEq)]
 pub struct Point {
     pub x: i32,

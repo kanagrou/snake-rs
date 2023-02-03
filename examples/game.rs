@@ -3,17 +3,30 @@ use snake::Game;
 use std::io::stdout;
 use std::time;
 use crossterm::event::{poll, read, Event};
-use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
+use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen, Clear, ClearType};
 use crossterm::cursor;
 
 fn main() -> crossterm::Result<()>{
     // TODO
     let mut game = Game::new(10,10);
     
-    let start_time = time::Instant::now();
+    
 
     stdout().execute(EnterAlternateScreen)?;
     stdout().execute(cursor::Hide)?;
+
+    println!("Use W A S D or Arrows to move");
+    println!("Press any key to Start");
+
+    while match read()? {
+        Event::Key(_) => false,
+        _ => true
+    }{}
+
+    stdout().execute(Clear(ClearType::All))?;
+
+
+    let start_time = time::Instant::now();
     loop {
         let mut key_buf = Vec::new();
         if poll(time::Duration::from_millis(300))? {
